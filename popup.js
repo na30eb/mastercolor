@@ -229,4 +229,5 @@ function showToast(message) {
   setTimeout(() => { btn.innerHTML = originalText; }, 1200);
 }
 
+
 renderHistory();
