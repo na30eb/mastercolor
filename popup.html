@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Color</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --card-bg: #ffffff;
+      --text: #18181b;
+      --text-muted: #71717a;
+      --primary: #a855f7;
+      --border: #e4e4e7;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    }
+
+    [data-theme="dark"] {
+      --bg: #09090b;
+      --card-bg: #141416;
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    }
+
+    body {
+      width: 340px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .brand {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      background: linear-gradient(to right, #a855f7, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover {
+      color: var(--text);
+      border-color: var(--text-muted);
+    }
+
+    /* Main Action Button */
+    .pick-btn {
+      width: 100%;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      padding: 12px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.1s, opacity 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+    .pick-btn:hover { opacity: 0.9; }
+    .pick-btn:active { transform: scale(0.98); }
+
+    /* Brand/Mood Section */
+    .mood-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-top: 12px;
+      box-shadow: var(--shadow);
+    }
+    .select-input {
+      flex: 1;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .gen-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .gen-btn:hover { opacity: 0.9; }
+
+    /* Color Result Card */
+    .result-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-top: 12px;
+      box-shadow: var(--shadow);
+    }
+    .color-info-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .color-preview {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+    }
+    .color-values {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .value-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: border 0.2s;
+    }
+    .value-row:hover { border-color: var(--primary); }
+    .copy-icon { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* Dynamic Palette Section */
+    .palette-section {
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+    .section-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .copy-all-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+    }
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+    .palette-swatch {
+      height: 40px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .palette-swatch:hover { transform: translateY(-2px); }
+
+    /* History Section */
+    .history-section { margin-top: 20px; }
+    .history-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .history-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: transform 0.15s;
+    }
+    .history-dot:hover { transform: scale(1.15); }
+    
+    pre {
+      margin: 0;
+      background: var(--bg);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      max-height: 80px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="brand">Master Color</div>
+    <button class="theme-toggle" id="theme-toggle">Dark</button>
+  </div>
+
+  <button class="pick-btn" id="pick-btn">
+    <span>✨</span> Pick Color from Screen
+  </button>
+
+  <div class="mood-box">
+    <div class="section-title" style="margin-bottom: 8px;">Brand & Mood Generator</div>
+    <div style="display: flex; gap: 8px;">
+      <select id="mood-select" class="select-input">
+        <option value="">-- Select a Mood / Brand --</option>
+        <option value="luxury">✨ Luxury (Quiet Luxury / Beige)</option>
+        <option value="minimal">⚪ Minimal & Modern (Slate Gray)</option>
+        <option value="cyberpunk">🔮 Cyberpunk (Neon Purple / Cyan)</option>
+        <option value="persian">☕ Persian Café (Turquoise / Brick)</option>
+        <option value="saas">⚡ SaaS & Tech (Trust Blue)</option>
+      </select>
+      <button id="gen-mood-btn" class="gen-btn">Generate</button>
+    </div>
+  </div>
+
+  <div class="result-card" id="result-card" style="display: none;">
+    <div class="color-info-wrapper">
+      <div class="color-preview" id="color-preview"></div>
+      <div class="color-values">
+        <div class="value-row" id="hex-row" title="Click to copy">
+          <span id="hex-val">#FFFFFF</span>
+          <span class="copy-icon">📋</span>
+        </div>
+        <div class="value-row" id="rgb-row" title="Click to copy">
+          <span id="rgb-val">rgb(255, 255, 255)</span>
+          <span class="copy-icon">📋</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="palette-section">
+      <div class="section-title-row">
+        <span class="section-title">Generated Palette</span>
+        <button class="copy-all-btn" id="copy-all-btn">Copy All</button>
+      </div>
+      <div class="palette-grid" id="palette-grid"></div>
+    </div>
+  </div>
+
+  <div class="result-card" id="contrast-card" style="display: none;">
+    <div class="section-title" style="margin-bottom: 10px;">Accessibility & Contrast</div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <div id="contrast-ratio-badge" style="font-size: 1.3rem; font-weight: 700; background: var(--bg); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">1.0:1</div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+          <span>AA Standard (Normal Text)</span>
+          <strong id="aa-status">-</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+          <span>AAA Standard (Enhanced)</span>
+          <strong id="aaa-status">-</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card" id="export-card" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <span class="section-title">Export Code</span>
+      <div style="display: flex; gap: 8px;">
+        <button class="copy-all-btn" id="btn-export-css" style="color: var(--text); font-size: 0.8rem;">CSS</button>
+        <span style="color: var(--border);">|</span>
+        <button class="copy-all-btn" id="btn-export-tw" style="color: var(--text); font-size: 0.8rem;">Tailwind</button>
+      </div>
+    </div>
+    <pre id="code-preview-box">Click CSS or Tailwind to generate code...</pre>
+  </div>
+
+  <div class="history-section">
+    <div class="section-title" style="margin-bottom: 8px;">Recent</div>
+    <div class="history-grid" id="history-grid"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
