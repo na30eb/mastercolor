@@ -29,7 +29,7 @@ const moodArchetypes = {
 
 let currentPalette = [];
 
-// ۳. فعال‌سازی قطره‌چکان مرورگر
+// ۳. فعال‌سازی قطره‌چکان مرورگر (EyeDropper)
 document.getElementById('pick-btn').addEventListener('click', async () => {
   if (!window.EyeDropper) {
     alert('EyeDropper API is not supported in this browser.');
@@ -62,21 +62,26 @@ document.getElementById('gen-mood-btn').addEventListener('click', () => {
   saveToHistory(currentPalette[0]);
 });
 
-// ۵. الگوریتم تولید پالت هارمونیک بر اساس یک رنگ
+// ۵. الگوریتم هوشمند تولید پالت بر اساس ترکیب رنگی دقیق (بدون به هم ریختن تناژ خاکستری)
 function generatePaletteFormula(hex) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
 
-  const adjust = (val, percent) => Math.max(0, Math.min(255, Math.round(val * percent)));
-  const rgbToHex = (r, g, b) => "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+  // تابع ترکیب رنگ با یک وزن مشخص (میکس هندسی با سفید یا مشکی)
+  const mix = (r1, g1, b1, r2, g2, b2, weight) => {
+    const r = Math.round(r1 * (1 - weight) + r2 * weight);
+    const g = Math.round(g1 * (1 - weight) + g2 * weight);
+    const b = Math.round(b1 * (1 - weight) + b2 * weight);
+    return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+  };
 
   return [
-    hex,
-    rgbToHex(adjust(r, 0.8), adjust(g, 0.8), adjust(b, 0.8)),
-    rgbToHex(adjust(r, 1.2), adjust(g, 0.6), adjust(b, 1.4)),
-    rgbToHex(adjust(r, 0.2), adjust(g, 0.2), adjust(b, 0.25)),
-    rgbToHex(adjust(r, 1.8), adjust(g, 1.8), adjust(b, 1.8))
+    hex,                               // 0: رنگ اصلی (Primary)
+    mix(r, g, b, 0, 0, 0, 0.25),       // 1: سایه تیره‌تر (Shade)
+    mix(r, g, b, 255, 255, 255, 0.25), // 2: سایه روشن‌تر (Tint)
+    mix(r, g, b, 0, 0, 0, 0.75),       // 3: رنگ متن کاملاً هماهنگ با پایه
+    mix(r, g, b, 255, 255, 255, 0.88)  // 4: رنگ پس‌زمینه نرم هماهنگ با پایه
   ];
 }
 
@@ -87,7 +92,7 @@ function hexToRgb(hex) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-// ۶. تابع جامع به‌روزرسانی کلی رابط کاربری (UI)
+// ۶. تابع جامع به‌روزرسانی رابط کاربری (UI)
 function updateUI(hex) {
   document.getElementById('result-card').style.display = 'block';
   document.getElementById('contrast-card').style.display = 'block';
@@ -97,7 +102,7 @@ function updateUI(hex) {
   document.getElementById('hex-val').innerText = hex;
   document.getElementById('rgb-val').innerText = hexToRgb(hex);
 
-  // کنتراست استاندارد WCAG نسبت به مشکی
+  // محاسبه کنتراست هوشمند با مکانیزم بهترین خوانایی
   const ratio = checkContrast(hex);
   document.getElementById('contrast-ratio-badge').innerText = `${ratio}:1`;
   
@@ -114,7 +119,7 @@ function updateUI(hex) {
 
   document.getElementById('code-preview-box').innerText = "Click CSS or Tailwind to generate code...";
   
-  // رندر پالت ۵ تایی
+  // رندر پالت ۵ تایی روی رابط کاربری
   const paletteGrid = document.getElementById('palette-grid');
   paletteGrid.innerHTML = '';
 
@@ -140,16 +145,22 @@ function getLuminance(r, g, b) {
   return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
 }
 
+// هوشمندسازی تست کنتراست بر اساس تشخیص رنگ تیره/روشن نسبت به متن سفید یا مشکی
 function checkContrast(hexColor) {
   const r = parseInt(hexColor.slice(1, 3), 16);
   const g = parseInt(hexColor.slice(3, 5), 16);
   const b = parseInt(hexColor.slice(5, 7), 16);
+  
   const colorLum = getLuminance(r, g, b);
-  const textLum = 0; // Black Text
-  return ((Math.max(colorLum, textLum) + 0.05) / (Math.min(colorLum, textLum) + 0.05)).toFixed(1);
+  
+  const contrastWithWhite = (1.0 + 0.05) / (colorLum + 0.05);
+  const contrastWithBlack = (colorLum + 0.05) / (0.0 + 0.05);
+
+  const bestContrast = Math.max(contrastWithWhite, contrastWithBlack);
+  return bestContrast.toFixed(1);
 }
 
-// ۷. خروجی متغیرهای کدهای پروژه
+// ۷. تولید کدهای خروجی تم تمیز و بدون اشکال
 document.getElementById('btn-export-css').addEventListener('click', () => {
   if (currentPalette.length === 0) return;
   const cssCode = `:root {\n  --primary: ${currentPalette[0]};\n  --secondary: ${currentPalette[1]};\n  --accent: ${currentPalette[2]};\n  --text: ${currentPalette[3]};\n  --bg: ${currentPalette[4]};\n}`;
@@ -166,6 +177,7 @@ document.getElementById('btn-export-tw').addEventListener('click', () => {
   showToast('Tailwind Config Copied!');
 });
 
+// کپی‌های ردیفی و کلیپ‌بورد
 document.getElementById('hex-row').addEventListener('click', () => {
   navigator.clipboard.writeText(document.getElementById('hex-val').innerText);
   showToast('HEX Copied!');
@@ -182,7 +194,7 @@ document.getElementById('copy-all-btn').addEventListener('click', () => {
   showToast('All colors copied!');
 });
 
-// ۸. مدیریت تاریخچه محلی (History)
+// ۸. مدیریت ذخیره‌سازی تاریخچه (History)
 function saveToHistory(hex) {
   let history = JSON.parse(localStorage.getItem('colorHistory')) || [];
   history = history.filter(c => c !== hex);
